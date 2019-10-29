@@ -1,5 +1,9 @@
+// PROJETO INTEGRADOR UNIVESP - 7º E 8º  BIMESTRES
+// Controle e Monitoramento do estoque de medicamentos  em farmácias 
+// de postos de saúde por meio da tecnologia RFID
+//
 // Programa : Leitura de Tags RFID
-// Adaptado de Arduino e Cia
+// 
 
 // Inclusão de bibliotecas
 #include <Arduino.h>
@@ -8,13 +12,14 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
- 
+// Definicoes pino modulo RC522 
 #define SS_PIN 02
 #define RST_PIN 20 
-// Definicoes pino modulo RC522
+
+// Inicializa o módulo RC522
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-// Inicializa o display no endereço 0x27
+// Inicializa o display no endereço 0x3F
 LiquidCrystal_I2C lcd(0x3F,16,2);
 
 // Declaração de variávies
@@ -25,7 +30,6 @@ int cont1 = 0;
 int cont2 = 0;
 
 void setup() {
-    // put your setup code here, to run once:
 
     // Inicia a serial
     Serial.begin(9600);
@@ -37,7 +41,7 @@ void setup() {
     // Mensagem inicial no LCD
     lcd.begin(16,2);
     lcd.setBacklight(HIGH);
-    lcd.print("Testando Mensagem");
+    lcd.print("Inicializando...");
 
 
 
@@ -48,7 +52,7 @@ void setup() {
         Serial.println(registro[i]);
         delay(500);
     }
-    len = sizeof(registro)/sizeof(registro[0]);
+    len = sizeof(registro)/sizeof(registro[0]); // Calcula a qunatidade de tags registradas
     Serial.print("Quantidade de tags registradas: ");
     Serial.println(len);
     Serial.println("Aproxime o seu cartao do leitor...");
@@ -57,18 +61,16 @@ void setup() {
 }
 
 void loop() {
-    // put your main code here, to run repeatedly:
+    
     // Aguarda a aproximacao da tag
     if ( ! mfrc522.PICC_IsNewCardPresent()) 
     {
-        //Serial.println("Retorno1");
         delay(50);
         return;
     }
     // Seleciona a tag
     if ( ! mfrc522.PICC_ReadCardSerial()) 
     {
-        //Serial.println("Retorno2");
         delay(50);
         return;
     }
@@ -92,6 +94,7 @@ void loop() {
     {
         if (conteudo.substring(1) == registro[i])
         {
+            // Faz a contagem das tags
             if (conteudo.substring(1) == registro[0])
             {
                 cont1++;
