@@ -19,8 +19,9 @@
 // Inicializa o módulo RC522
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-// Inicializa o display no endereço 0x3F
-LiquidCrystal_I2C lcd(0x3F,16,2);
+// Inicializa o display no endereço 0x27
+// Pinagem para o LCD D1 => SCL; D2 => SDA 
+LiquidCrystal_I2C lcd(0x27,16,2);
 
 // Declaração de variávies
 char st[20];
@@ -33,13 +34,18 @@ void setup() {
 
     // Inicia a serial
     Serial.begin(9600);
-    // Inicia  SPI bus
+    // Inicia a SPI bus
     SPI.begin();
-    // Inicia MFRC522
+    // Inicia o leitor de RFID MFRC522
     mfrc522.PCD_Init(); 
+    // Inicia o LCD
+    lcd.init();
+
+    lcd.begin(16,2);
+    lcd.backlight();
 
     // Mensagem inicial no LCD
-    lcd.begin(16,2);
+    
     lcd.setBacklight(HIGH);
     lcd.print("Inicializando...");
 
@@ -50,7 +56,7 @@ void setup() {
     for (int i = 0; i < 2; i++)
     {
         Serial.println(registro[i]);
-        delay(500);
+        delay(1000);
     }
     len = sizeof(registro)/sizeof(registro[0]); // Calcula a qunatidade de tags registradas
     Serial.print("Quantidade de tags registradas: ");
@@ -58,6 +64,8 @@ void setup() {
     Serial.println("Aproxime o seu cartao do leitor...");
     Serial.println();
 
+    lcd.setCursor(0,0);
+    lcd.print("Aguardando...");
 }
 
 void loop() {
@@ -94,22 +102,36 @@ void loop() {
     {
         if (conteudo.substring(1) == registro[i])
         {
+            lcd.setCursor(0,0);
             // Faz a contagem das tags
             if (conteudo.substring(1) == registro[0])
             {
                 cont1++;
                 Serial.print("Quantidade Chaveiro: ");
                 Serial.println(cont1);
-                delay(500);
+                // Mensagem impressa no LCD
+                lcd.print("Dipirona 40mg");
+                lcd.setCursor(0,1);
+                lcd.print(cont1);
+                lcd.print(" UN");
+
             }
             if (conteudo.substring(1) == registro[1])
             {
                 cont2++;
                 Serial.print("Quantidade Cartão: ");
                 Serial.println(cont2);
-                delay(500);
+                // Mensagem impressa no LCD
+                lcd.print("Paracetamol 50mg");
+                lcd.setCursor(0,1);
+                lcd.print(cont2);
+                lcd.print(" UN");
+
             }
         }
     }
-
+    delay(2000);
+    lcd.clear();                // Limpa o visor do LCD
+    lcd.setCursor(0,0);         // Ajusta o cursor para o inicio
+    lcd.print("Aguardando..."); // Aguarda nova leitura
 }
