@@ -16,6 +16,9 @@
 #define SS_PIN 02
 #define RST_PIN 20 
 
+// Outras defnicoes
+#define buttom 16
+
 // Inicializa o módulo RC522
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
@@ -26,14 +29,20 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 // Declaração de variávies
 char st[20];
 String registro[] = {"85 0B 11 AB", "C3 FE 87 AB"}; // Tags registradas
+String mensagem = "Aguardando...";
 int len;
 int cont1 = 0;
 int cont2 = 0;
+int botao;
+bool troca = false;
+
 
 void setup() {
 
     // Inicia a serial
     Serial.begin(9600);
+    // Inicia as portas
+    pinMode(buttom, INPUT);
     // Inicia a SPI bus
     SPI.begin();
     // Inicia o leitor de RFID MFRC522
@@ -58,7 +67,7 @@ void setup() {
         Serial.println(registro[i]);
         delay(1000);
     }
-    len = sizeof(registro)/sizeof(registro[0]); // Calcula a qunatidade de tags registradas
+    len = sizeof(registro)/sizeof(registro[0]); // Calcula a quantidade de tags registradas
     Serial.print("Quantidade de tags registradas: ");
     Serial.println(len);
     Serial.println("Aproxime o seu cartao do leitor...");
@@ -70,6 +79,28 @@ void setup() {
 
 void loop() {
     
+    botao = digitalRead(buttom);
+    delay(200);
+    if (botao)
+    {
+        troca = !troca;
+        if (troca)
+        {
+            mensagem = "Gravando...";
+            lcd.clear();                // Limpa o visor do LCD
+            lcd.setCursor(0,0);         // Ajusta o cursor para o inicio
+            lcd.print(mensagem);
+        }
+        else
+        {
+            mensagem = "Aguardando...";
+            lcd.clear();                // Limpa o visor do LCD
+            lcd.setCursor(0,0);         // Ajusta o cursor para o inicio
+            lcd.print(mensagem);
+        }
+        
+    }
+
     // Aguarda a aproximacao da tag
     if ( ! mfrc522.PICC_IsNewCardPresent()) 
     {
@@ -106,7 +137,20 @@ void loop() {
             // Faz a contagem das tags
             if (conteudo.substring(1) == registro[0])
             {
-                cont1++;
+                if (troca)
+                {
+                    cont1++; 
+                }
+                else
+                {
+                    cont1--;
+                    if (cont1 < 0)
+                    {
+                        cont1 = 0;
+                    }
+                    
+                }
+                
                 Serial.print("Quantidade Chaveiro: ");
                 Serial.println(cont1);
                 // Mensagem impressa no LCD
@@ -118,7 +162,19 @@ void loop() {
             }
             if (conteudo.substring(1) == registro[1])
             {
-                cont2++;
+                if (troca)
+                {
+                    cont2++;
+                }
+                else
+                {
+                    cont2--;
+                    if (cont2 < 0)
+                    {
+                        cont2 = 0;
+                    }
+                    
+                }
                 Serial.print("Quantidade Cartão: ");
                 Serial.println(cont2);
                 // Mensagem impressa no LCD
@@ -133,5 +189,5 @@ void loop() {
     delay(2000);
     lcd.clear();                // Limpa o visor do LCD
     lcd.setCursor(0,0);         // Ajusta o cursor para o inicio
-    lcd.print("Aguardando..."); // Aguarda nova leitura
+    lcd.print(mensagem);        // Aguarda nova leitura
 }
